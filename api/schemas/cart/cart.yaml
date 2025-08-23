@@ -1,0 +1,24 @@
+type: object
+description: Cart item model
+required: [id, product_name, qty, buyer, price, order_id, created_at, updated_at]
+properties:
+  id:
+    type: integer
+    format: int64
+  product_name:
+    type: string
+  qty:
+    type: integer
+    format: int32
+  buyer:
+    type: string
+  price:
+    type: integer
+    format: float
+  order_id:
+    type: integer
+    format: int64
+  created_at:
+    type: string
+  updated_at:
+    type: string

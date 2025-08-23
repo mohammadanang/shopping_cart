@@ -1,0 +1,12 @@
+type: object
+description: Update order item model
+required: [discount, status, total]
+properties:
+  discount:
+    type: integer
+    format: float
+  status:
+    type: string
+  total:
+    type: integer
+    format: float

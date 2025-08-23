@@ -1,0 +1,21 @@
+services:
+  psql:
+    container_name: psql-sc
+    image: postgres:latest
+    ports:
+      - '${DB_PORT:-5432}:5432'
+    environment:
+      POSTGRES_DB: '${DB_NAME}'
+      POSTGRES_USER: '${DB_USER}'
+      POSTGRES_PASSWORD: '${DB_PASSWORD}'
+    volumes:
+      - './deployments/postgres/data:/var/lib/postgresql/data'
+    restart: always
+  adminer:
+    container_name: adminer-sc
+    image: adminer
+    ports:
+      - '8888:8080'
+    restart: always
+    depends_on:
+      - psql

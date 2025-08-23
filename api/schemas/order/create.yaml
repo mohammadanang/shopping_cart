@@ -1,0 +1,14 @@
+type: object
+description: Create order item model
+required: [order_number, discount, status, total]
+properties:
+  order_number:
+    type: string
+  discount:
+    type: integer
+    format: float
+  status:
+    type: string
+  total:
+    type: integer
+    format: float

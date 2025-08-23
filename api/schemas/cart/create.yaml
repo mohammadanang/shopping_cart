@@ -1,0 +1,17 @@
+type: object
+description: Create cart item model
+required: [product_name, qty, buyer, price, order_id]
+properties:
+  product_name:
+    type: string
+  qty:
+    type: integer
+    format: int32
+  buyer:
+    type: string
+  price:
+    type: integer
+    format: float
+  order_id:
+    type: integer
+    format: int64

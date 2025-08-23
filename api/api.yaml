@@ -1,0 +1,435 @@
+openapi: "3.0.3"
+info:
+  title: Shopping Cart API
+  version: "1.0"
+  description: API for managing shopping carts
+  contact:
+    name: Mohammad Anang
+    email: m.anangnur@gmail.com
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Cart
+    description: Operations related to shopping carts
+  - name: Order
+    description: Operations related to orders
+
+paths:
+  /order:
+    post:
+      tags:
+        - Order
+      summary: Add a new order
+      description: Adds a new order to the system.
+      operationId: AddOrder
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderCreateInput"
+      responses:
+        "201":
+          description: Order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderSuccessResponse"
+        "500":
+          description: Failed to add order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - Order
+      summary: List all orders
+      description: Retrieves a list of all orders.
+      parameters:
+        - $ref: "#/components/parameters/PageParam"
+        - $ref: "#/components/parameters/SizeParam"
+        - $ref: "#/components/parameters/OrderNumberParam"
+      operationId: ListOrders
+      responses:
+        "200":
+          description: All orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderPaginateSuccessResponse"
+        "500":
+          description: Failed to retrieve orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Data not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /order/{id}:
+    get:
+      tags:
+        - Order
+      summary: Detail an order
+      description: Retrieves the details of a specific order.
+      operationId: ShowOrder
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "200":
+          description: Order details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderSuccessResponse"
+        "500":
+          description: Failed to retrieve orders
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Data not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      tags:
+        - Order
+      summary: Update an existing order
+      description: Updates the details of a specific order.
+      operationId: EditOrder
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrderUpdateInput"
+      responses:
+        "200":
+          description: Order updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrderSuccessResponse"
+        "500":
+          description: Failed to update order
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /cart:
+    post:
+      tags:
+        - Cart
+      summary: Add a new cart
+      description: Adds a new cart to the system.
+      operationId: AddCart
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CartCreateInput"
+      responses:
+        "201":
+          description: Cart added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartSuccessResponse"
+        "500":
+          description: Failed to add cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    get:
+      tags:
+        - Cart
+      summary: List all carts
+      description: |
+        Retrieves a list of all shopping carts.
+      operationId: ListCarts
+      responses:
+        "200":
+          description: All carts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartListSuccessResponse"
+        "500":
+          description: Failed to retrieve carts
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Data not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /cart/{id}:
+    delete:
+      tags:
+        - Cart
+      summary: Remove a cart
+      description: |
+        Removes a cart from the system.
+      operationId: RemoveCart
+      parameters:
+        - $ref: "#/components/parameters/IdParam"
+      responses:
+        "204":
+          description: Removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CartSuccessResponse"
+        "500":
+          description: Failed to remove cart
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: |
+        Enter your **JWT Bearer Token** to authorize requests.  
+        Example: `Authorization: Bearer <your-token>`
+
+  parameters:
+    IdParam:
+      name: id
+      in: path
+      required: true
+      description: The ID of the data to remove
+      example: 1
+      style: form
+      schema:
+        type: integer
+        format: int32
+    OrderNumberParam:
+      name: order_number
+      in: query
+      required: false
+      description: The order number of the data to remove
+      example: "ORD123456"
+      style: form
+      allowEmptyValue: true
+      schema:
+        type: string
+        nullable: true
+    PageParam:
+      name: page
+      in: query
+      required: false
+      description: The page number to retrieve
+      example: 1
+      style: form
+      allowEmptyValue: true
+      schema:
+        type: integer
+        format: int32
+        nullable: true
+    SizeParam:
+      name: size
+      in: query
+      required: false
+      description: The size of the data to retrieve
+      example: 10
+      style: form
+      allowEmptyValue: true
+      schema:
+        type: integer
+        format: int32
+        nullable: true
+
+  schemas:
+    # Common Sections
+    ErrorResponse:
+      type: object
+      description: Represents an error response from the API.
+      required: [message, code, status]
+      properties:
+        message:
+          type: string
+          description: Error message
+          example: "Data not found"
+        code:
+          type: integer
+          description: Error code
+          example: 400
+        status:
+          type: string
+          description: Error status
+          example: "error"
+    MetaData:
+      type: object
+      description: Metadata about the response
+      properties:
+        page:
+          type: integer
+          format: int32
+          description: Current page number
+          example: 1
+        size:
+          type: integer
+          format: int32
+          description: Number of items per page
+          example: 10
+        total_data:
+          type: integer
+          format: int64
+          description: Total number of items
+          example: 50
+        total_pages:
+          type: integer
+          format: int32
+          description: Total number of pages
+          example: 5
+    # Order Sections
+    Order:
+      $ref: "./schemas/order/order.yaml"
+    OrderCreateInput:
+      $ref: "./schemas/order/create.yaml"
+    OrderUpdateInput:
+      $ref: "./schemas/order/update.yaml"
+    OrderSuccessResponse:
+      type: object
+      required: [data, message, code, status]
+      properties:
+        data:
+          type: object
+          description: Order item data
+          $ref: "#/components/schemas/Order"
+          example:
+            id: 1
+            order_number: "ORD123456"
+            discount: 10.5
+            status: "pending"
+            total: 150.75
+            created_at: "2023-10-01 12:00:00"
+            updated_at: "2023-10-01 12:00:00"
+        message:
+          type: string
+          description: Success message
+          example: "Order item list retrieved successfully"
+        code:
+          type: integer
+          description: Success code
+          example: 200
+        status:
+          type: string
+          description: Success status
+          example: "success"
+    OrderPaginateSuccessResponse:
+      type: object
+      required: [data, meta, message, code, status]
+      properties:
+        data:
+          type: array
+          description: List of order items
+          items:
+            $ref: "#/components/schemas/Order"
+          example:
+            - id: 1
+              order_number: "ORD123456"
+              discount: 10.5
+              status: "pending"
+              total: 150.75
+              created_at: "2023-10-01 12:00:00"
+              updated_at: "2023-10-01 12:00:00"
+        meta:
+          $ref: "#/components/schemas/MetaData"
+        message:
+          type: string
+          description: Success message
+          example: "Order items retrieved successfully"
+        code:
+          type: integer
+          description: Success code
+          example: 200
+        status:
+          type: string
+          description: Success status
+          example: "success"
+    # Cart Sections
+    CartCreateInput:
+      $ref: "./schemas/cart/create.yaml"
+    Cart:
+      $ref: "./schemas/cart/cart.yaml"
+    CartSuccessResponse:
+      type: object
+      required: [data, message, code, status]
+      properties:
+        data:
+          type: object
+          description: Cart item data
+          $ref: "#/components/schemas/Cart"
+          example:
+            id: 1
+            product_name: "Sample Product"
+            qty: 2
+            buyer: "John Doe"
+            price: 100
+            order_id: 123
+            created_at: "2023-10-01 12:00:00"
+            updated_at: "2023-10-01 12:00:00"
+        message:
+          type: string
+          description: Success message
+          example: "Cart item list retrieved successfully"
+        code:
+          type: integer
+          description: Success code
+          example: 200
+        status:
+          type: string
+          description: Success status
+          example: "success"
+    CartListSuccessResponse:
+      type: object
+      required: [data, message, code, status]
+      properties:
+        data:
+          type: array
+          description: List of cart items
+          items:
+            $ref: "#/components/schemas/Cart"
+          example:
+            - id: 1
+              product_name: "Sample Product"
+              qty: 2
+              buyer: "John Doe"
+              price: 100
+              order_id: 123
+              created_at: "2023-10-01 12:00:00"
+              updated_at: "2023-10-01 12:00:00"
+        message:
+          type: string
+          description: Success message
+          example: "Cart items retrieved successfully"
+        code:
+          type: integer
+          description: Success code
+          example: 200
+        status:
+          type: string
+          description: Success status
+          example: "success"
