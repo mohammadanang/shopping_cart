@@ -1,7 +1,7 @@
 # Shopping Cart
 
-Go: v1.25
-fiber: v2
+- Go: v1.25
+- fiber: v2
 
 ## Plans
 
