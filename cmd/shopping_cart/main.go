@@ -3,50 +3,73 @@ package main
 import (
 	"context"
 	"log"
+	"os"
+	"os/signal"
+	"syscall"
 
 	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/adaptor"
 	"github.com/mohammadanang/shopping-cart/internal/server"
 	"github.com/mohammadanang/shopping-cart/pkg/api"
 	"github.com/mohammadanang/shopping-cart/pkg/config"
 	"github.com/mohammadanang/shopping-cart/pkg/database"
-	swgui "github.com/swaggest/swgui/v5"
+	"github.com/mohammadanang/shopping-cart/pkg/docs"
 )
 
 func main() {
-	cfg := config.LoadConfig(".")
-	app := fiber.New()
+	// Global recover for main goroutine
+	defer func() {
+		if r := recover(); r != nil {
+			log.Printf("❌ Application panicked: %v", r)
+		}
+	}()
 
+	// === CONFIGURATION ===
+	cfg := config.LoadConfig(".")
+	ctx := context.Background()
+	db := <-database.NewPostgres(ctx, cfg)
+	if db.Err != nil {
+		log.Fatalf("DB connection failed: %v", db.Err)
+	}
+
+	defer db.Pool.Close()
+	// === CONFIGURATION ===
+
+	app := fiber.New()
+	appServer := server.NewServer(db.Queries, app)
+
+	// === MIDDLEWARES ===
+	appServer.SetMiddlewares()
+	// === MIDDLEWARES ===
+
+	// === ROUTES ===
 	app.Get("/", func(c *fiber.Ctx) error {
 		return c.SendString("Shopping Cart API")
 	})
 
-	app.Get("/openapi.json", func(c *fiber.Ctx) error {
-		swagger, err := api.GetSwagger()
-		if err != nil {
-			return c.Status(fiber.StatusInternalServerError).SendString(err.Error())
-		}
+	openapi := docs.NewDocsHandler()
+	openapi.RegisterRoutes(app)
+	api.RegisterHandlers(app, appServer.Handlers)
+	// === ROUTES ===
 
-		return c.JSON(swagger)
-	})
-
-	swaggerUI := swgui.NewHandler(
-		"Shopping Cart API Docs",
-		"/openapi.json",
-		"/docs",
-	)
-	app.Get("/docs/*", adaptor.HTTPHandler(swaggerUI))
-
-	ctx := context.Background()
-	dbConfig, dbPool := database.NewPostgresPool(ctx, cfg)
-	defer dbPool.Close()
-
-	appServer := server.NewServer(dbConfig)
-	api.RegisterHandlers(app, appServer)
-
+	// Run server in goroutine
 	appPort := cfg.Port
 	log.Println("🚀 Server running on :" + appPort)
-	if err := app.Listen(":" + appPort); err != nil {
-		log.Fatal(err)
-	}
+	go func() {
+		if err := app.Listen(":" + cfg.Port); err != nil {
+			log.Printf("❌ Fiber error: %v", err)
+		}
+	}()
+
+	// === SHUTDOWN ===
+	// Graceful shutdown
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	<-quit
+
+	log.Println("⏳ Shutting down server...")
+	_ = app.Shutdown() // Shutdown Fiber app
+
+	db.Pool.Close() // Close DB pool
+	log.Println("✅ Database pool closed, shutdown complete")
+	// === SHUTDOWN ===
 }

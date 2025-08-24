@@ -2,7 +2,6 @@ package database
 
 import (
 	"context"
-	"log"
 	"strconv"
 	"time"
 
@@ -12,22 +11,41 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 )
 
-func NewPostgresPool(ctx context.Context, conf *config.Config) (*dbgen.Queries, *pgxpool.Pool) {
-	dbConnStr := "postgres://" + conf.DBUser + ":" + conf.DBPassword + "@" + conf.DBHost + ":" + strconv.Itoa(conf.DBPort) + "/" + conf.DBName + "?sslmode=disable"
-	cfg, err := pgxpool.ParseConfig(dbConnStr)
-	if err != nil {
-		log.Fatalf("failed to parse dsn: %v", err)
-	}
+type Postgres struct {
+	Queries *dbgen.Queries
+	Pool    *pgxpool.Pool
+	Err     error
+}
 
-	// optional tuning
-	cfg.MaxConns = 10
-	cfg.MinConns = 2
-	cfg.MaxConnLifetime = time.Hour
+func NewPostgres(ctx context.Context, conf *config.Config) <-chan Postgres {
+	result := make(chan Postgres)
 
-	pool, err := pgxpool.NewWithConfig(ctx, cfg)
-	if err != nil {
-		log.Fatalf("failed to connect to database: %v", err)
-	}
+	go func() {
+		defer close(result)
 
-	return dbgen.New(pool), pool
+		dbConnStr := "postgres://" + conf.DBUser + ":" + conf.DBPassword + "@" + conf.DBHost + ":" + strconv.Itoa(conf.DBPort) + "/" + conf.DBName + "?sslmode=" + conf.SSLMode
+		cfg, err := pgxpool.ParseConfig(dbConnStr)
+		if err != nil {
+			result <- Postgres{Err: err}
+			return
+		}
+
+		// optional tuning
+		cfg.MaxConns = 10
+		cfg.MinConns = 2
+		cfg.MaxConnLifetime = time.Hour
+
+		pool, err := pgxpool.NewWithConfig(ctx, cfg)
+		if err != nil {
+			result <- Postgres{Err: err}
+			return
+		}
+
+		result <- Postgres{
+			Queries: dbgen.New(pool),
+			Pool:    pool,
+		}
+	}()
+
+	return result
 }
