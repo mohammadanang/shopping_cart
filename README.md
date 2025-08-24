@@ -2,6 +2,12 @@
 
 - Go: v1.25
 - fiber: v2
+- oapi-codegen: v2
+- pgx: v5
+- paseto
+- sqlc
+- viper
+- golang-migrate
 
 ## Plans
 

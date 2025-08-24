@@ -129,6 +129,8 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /cart:
     post:
+      security:
+        - bearerAuth: []
       tags:
         - Cart
       summary: Add a new cart

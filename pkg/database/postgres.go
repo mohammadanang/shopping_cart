@@ -23,7 +23,7 @@ func NewPostgres(ctx context.Context, conf *config.Config) <-chan Postgres {
 	go func() {
 		defer close(result)
 
-		dbConnStr := "postgres://" + conf.DBUser + ":" + conf.DBPassword + "@" + conf.DBHost + ":" + strconv.Itoa(conf.DBPort) + "/" + conf.DBName + "?sslmode=" + conf.SSLMode
+		dbConnStr := "postgres://" + conf.Env.DBUser + ":" + conf.Env.DBPassword + "@" + conf.Env.DBHost + ":" + strconv.Itoa(conf.Env.DBPort) + "/" + conf.Env.DBName + "?sslmode=" + conf.Env.SSLMode
 		cfg, err := pgxpool.ParseConfig(dbConnStr)
 		if err != nil {
 			result <- Postgres{Err: err}

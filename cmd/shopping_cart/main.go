@@ -24,7 +24,7 @@ func main() {
 	}()
 
 	// === CONFIGURATION ===
-	cfg := config.LoadConfig(".")
+	cfg := config.NewConfig(".")
 	ctx := context.Background()
 	db := <-database.NewPostgres(ctx, cfg)
 	if db.Err != nil {
@@ -35,7 +35,7 @@ func main() {
 	// === CONFIGURATION ===
 
 	app := fiber.New()
-	appServer := server.NewServer(db.Queries, app)
+	appServer := server.NewServer(db.Queries, app, cfg)
 
 	// === MIDDLEWARES ===
 	appServer.SetMiddlewares()
@@ -52,10 +52,10 @@ func main() {
 	// === ROUTES ===
 
 	// Run server in goroutine
-	appPort := cfg.Port
+	appPort := cfg.Env.Port
 	log.Println("🚀 Server running on :" + appPort)
 	go func() {
-		if err := app.Listen(":" + cfg.Port); err != nil {
+		if err := app.Listen(":" + appPort); err != nil {
 			log.Printf("❌ Fiber error: %v", err)
 		}
 	}()

@@ -1,7 +1,13 @@
 package server
 
 import (
+	"time"
+
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/gofiber/fiber/v2/middleware/helmet"
+	"github.com/gofiber/fiber/v2/middleware/idempotency"
+	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/logger"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/mohammadanang/shopping-cart/db/dbgen"
@@ -12,6 +18,7 @@ import (
 	orderRepository "github.com/mohammadanang/shopping-cart/internal/modules/order/repository"
 	orderService "github.com/mohammadanang/shopping-cart/internal/modules/order/service"
 	"github.com/mohammadanang/shopping-cart/pkg/api"
+	"github.com/mohammadanang/shopping-cart/pkg/config"
 )
 
 type handlers struct {
@@ -22,9 +29,10 @@ type handlers struct {
 type Server struct {
 	app      *fiber.App
 	Handlers api.ServerInterface
+	conf     *config.Config
 }
 
-func NewServer(db *dbgen.Queries, app *fiber.App) *Server {
+func NewServer(db *dbgen.Queries, app *fiber.App, cfg *config.Config) *Server {
 	cartRepo := cartRepository.NewCartRepository(db)
 	cartSvc := cartService.NewCartService(cartRepo)
 	cartHdl := cartHandler.NewCartHandler(cartSvc)
@@ -34,7 +42,8 @@ func NewServer(db *dbgen.Queries, app *fiber.App) *Server {
 	orderHdl := orderHandler.NewOrderHandler(orderSvc)
 
 	return &Server{
-		app: app,
+		app:  app,
+		conf: cfg,
 		Handlers: &handlers{
 			OrderHandler: orderHdl,
 			CartHandler:  cartHdl,
@@ -47,9 +56,33 @@ func (s *Server) SetMiddlewares() {
 	s.app.Use(recover.New(recover.Config{
 		EnableStackTrace: true,
 	}))
+	s.app.Use(helmet.New())
+	s.app.Use(idempotency.New())
 	s.app.Use(logger.New(logger.Config{
 		Format:     "[${time}] ${ip} ${status} - ${latency} ${method} ${path}\n",
 		TimeFormat: "2006-01-02 15:04:05",
 		TimeZone:   "Local",
+	}))
+	s.app.Use(limiter.New(limiter.Config{
+		Max:        5,                // allow 5 requests
+		Expiration: 30 * time.Second, // per 30 seconds
+		KeyGenerator: func(c *fiber.Ctx) string {
+			return c.IP() // rate limit by client IP
+		},
+		LimitReached: func(c *fiber.Ctx) error {
+			return c.Status(fiber.StatusTooManyRequests).
+				JSON(fiber.Map{
+					"error":  "Too many requests, slow down!",
+					"status": "error",
+					"code":   fiber.StatusTooManyRequests,
+				})
+		},
+	}))
+	s.app.Use(cors.New(cors.Config{
+		AllowOrigins:     s.conf.Env.AllowedOrigins,
+		AllowMethods:     s.conf.Env.AllowedMethods,
+		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
+		ExposeHeaders:    "Content-Length, X-Custom-Header",
+		AllowCredentials: true,
 	}))
 }

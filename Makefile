@@ -6,12 +6,14 @@ run:
 	@go run cmd/shopping_cart/main.go
 openapi:
 	@go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen -config api/config.yaml ./api/api.yaml
+# make sure to install sqlc
 sqlc:
 	@sqlc generate --file=db/sqlc.yaml
 db_up:
 	@docker-compose --env-file app.env up -d
 db_down:
 	@docker-compose --env-file app.env down -v
+# make sure to install golang-migrate
 migration:
 	@migrate create -ext sql -dir db/migrations -seq $(FILENAME)
 migrate_up:
@@ -20,5 +22,8 @@ migrate_down:
 	@migrate -path=./db/migrations -database "${DB_URL}" down
 migrate_force:
 	@migrate -path=./db/migrations -database "${DB_URL}" force ${VERSION}
+key_pairs:
+	@openssl genpkey -algorithm ed25519 -out private.pem
+	@openssl pkey -in private.pem -pubout -out public.pem
 
-.PHONY: run openapi sqlc db_up db_down migration migrate_up migrate_down migrate_force
+.PHONY: run openapi sqlc db_up db_down migration migrate_up migrate_down migrate_force key_pairs
