@@ -1,6 +1,0 @@
-package: api
-output: pkg/api/docs.gen.go
-generate:
-  - types
-  - fiber-server
-  - spec

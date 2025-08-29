@@ -1,0 +1,23 @@
+{
+  "name": "shopping-cart",
+  "version": "1.0.0",
+  "description": "- Go: v1.25 - fiber: v2 - oapi-codegen: v2 - pgx: v5 - paseto - sqlc - viper - golang-migrate",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mohammadanang/shopping_cart.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mohammadanang/shopping_cart/issues"
+  },
+  "homepage": "https://github.com/mohammadanang/shopping_cart#readme",
+  "dependencies": {
+    "swagger-ui-dist": "^5.27.1"
+  }
+}

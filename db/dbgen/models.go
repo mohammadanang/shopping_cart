@@ -10,6 +10,16 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type Access struct {
+	ID           int64  `json:"id"`
+	ApiKey       string `json:"api_key"`
+	RefreshToken string `json:"refresh_token"`
+	// `admin`, `guest`, `user`
+	Role      string    `json:"role"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}
+
 type Cart struct {
 	ID          int64     `json:"id"`
 	ProductName string    `json:"product_name"`

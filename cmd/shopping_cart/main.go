@@ -5,14 +5,14 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/mohammadanang/shopping-cart/db/dbgen"
 	"github.com/mohammadanang/shopping-cart/internal/server"
-	"github.com/mohammadanang/shopping-cart/pkg/api"
 	"github.com/mohammadanang/shopping-cart/pkg/config"
 	"github.com/mohammadanang/shopping-cart/pkg/database"
-	"github.com/mohammadanang/shopping-cart/pkg/docs"
 )
 
 func main() {
@@ -32,23 +32,23 @@ func main() {
 	}
 
 	defer db.Pool.Close()
+	dbStore := dbgen.NewStore(db.Pool)
 	// === CONFIGURATION ===
 
 	app := fiber.New()
-	appServer := server.NewServer(db.Queries, app, cfg)
+	appServer := server.NewServer(db.Queries, dbStore, app, cfg)
 
 	// === MIDDLEWARES ===
 	appServer.SetMiddlewares()
 	// === MIDDLEWARES ===
 
 	// === ROUTES ===
-	app.Get("/", func(c *fiber.Ctx) error {
-		return c.SendString("Shopping Cart API")
-	})
+	appServer.SetRoutes()
 
-	openapi := docs.NewDocsHandler()
-	openapi.RegisterRoutes(app)
-	api.RegisterHandlers(app, appServer.Handlers)
+	wd, _ := os.Getwd() // current working directory
+	openapiPath := filepath.Join(wd, "api", "api.yaml")
+	app.Static("/openapi.json", openapiPath)
+	app.Static("/swagger", "./docs/swagger-ui")
 	// === ROUTES ===
 
 	// Run server in goroutine

@@ -14,39 +14,34 @@ import (
 	cartHandler "github.com/mohammadanang/shopping-cart/internal/modules/cart/handler"
 	cartRepository "github.com/mohammadanang/shopping-cart/internal/modules/cart/repository"
 	cartService "github.com/mohammadanang/shopping-cart/internal/modules/cart/service"
-	orderHandler "github.com/mohammadanang/shopping-cart/internal/modules/order/handler"
-	orderRepository "github.com/mohammadanang/shopping-cart/internal/modules/order/repository"
-	orderService "github.com/mohammadanang/shopping-cart/internal/modules/order/service"
-	"github.com/mohammadanang/shopping-cart/pkg/api"
+
 	"github.com/mohammadanang/shopping-cart/pkg/config"
 )
 
 type handlers struct {
 	cartHandler.CartHandler
-	orderHandler.OrderHandler
+	// orderHandler.OrderHandler
 }
 
 type Server struct {
 	app      *fiber.App
-	Handlers api.ServerInterface
+	store    dbgen.Store
+	Handlers ApiServer
 	conf     *config.Config
 }
 
-func NewServer(db *dbgen.Queries, app *fiber.App, cfg *config.Config) *Server {
+func NewServer(db *dbgen.Queries, store dbgen.Store, app *fiber.App, cfg *config.Config) *Server {
 	cartRepo := cartRepository.NewCartRepository(db)
-	cartSvc := cartService.NewCartService(cartRepo)
+	cartSvc := cartService.NewCartService(store, cartRepo)
 	cartHdl := cartHandler.NewCartHandler(cartSvc)
 
-	orderRepo := orderRepository.NewOrderRepository(db)
-	orderSvc := orderService.NewOrderService(orderRepo)
-	orderHdl := orderHandler.NewOrderHandler(orderSvc)
-
 	return &Server{
-		app:  app,
-		conf: cfg,
+		app:   app,
+		store: store,
+		conf:  cfg,
 		Handlers: &handlers{
-			OrderHandler: orderHdl,
-			CartHandler:  cartHdl,
+			// OrderHandler: orderHdl,
+			CartHandler: cartHdl,
 		},
 	}
 }
@@ -64,8 +59,8 @@ func (s *Server) SetMiddlewares() {
 		TimeZone:   "Local",
 	}))
 	s.app.Use(limiter.New(limiter.Config{
-		Max:        5,                // allow 5 requests
-		Expiration: 30 * time.Second, // per 30 seconds
+		Max:        10,              // allow 5 requests
+		Expiration: 1 * time.Minute, // per 30 seconds
 		KeyGenerator: func(c *fiber.Ctx) string {
 			return c.IP() // rate limit by client IP
 		},
@@ -85,4 +80,13 @@ func (s *Server) SetMiddlewares() {
 		ExposeHeaders:    "Content-Length, X-Custom-Header",
 		AllowCredentials: true,
 	}))
+}
+
+func (s *Server) SetRoutes() {
+	s.app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Shopping Cart API")
+	})
+
+	apiRoutes := s.app.Group("/api")
+	s.Handlers.RegisterRoutes(apiRoutes)
 }

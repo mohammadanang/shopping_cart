@@ -7,8 +7,8 @@ import (
 )
 
 const (
-	authorizationHeader     = "authorization"
-	authorizationBearerType = "bearer"
+	authorizationHeader     = "Authorization"
+	authorizationBearerType = "Bearer"
 	authorizationPayload    = "authorization_payload"
 )
 

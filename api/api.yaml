@@ -7,9 +7,6 @@ info:
     name: Mohammad Anang
     email: m.anangnur@gmail.com
 
-security:
-  - bearerAuth: []
-
 tags:
   - name: Cart
     description: Operations related to shopping carts
@@ -129,8 +126,8 @@ paths:
                 $ref: "#/components/schemas/ErrorResponse"
   /cart:
     post:
-      security:
-        - bearerAuth: []
+      # security:
+      #   - BearerAuth: []
       tags:
         - Cart
       summary: Add a new cart
@@ -159,6 +156,8 @@ paths:
       tags:
         - Cart
       summary: List all carts
+      security:
+        - BearerAuth: []
       description: |
         Retrieves a list of all shopping carts.
       operationId: ListCarts
@@ -207,14 +206,13 @@ paths:
 
 components:
   securitySchemes:
-    bearerAuth:
+    BearerAuth:
       type: http
       scheme: bearer
       bearerFormat: JWT
       description: |
         Enter your **JWT Bearer Token** to authorize requests.  
         Example: `Authorization: Bearer <your-token>`
-
   parameters:
     IdParam:
       name: id
@@ -261,7 +259,6 @@ components:
         type: integer
         format: int32
         nullable: true
-
   schemas:
     # Common Sections
     ErrorResponse:

@@ -53,3 +53,7 @@ func (r *CartRepository) Update(ctx context.Context, id int64, item dbgen.EditCa
 func (r *CartRepository) Delete(ctx context.Context, id int64) error {
 	return r.q.RemoveCart(ctx, id)
 }
+
+func (r *CartRepository) DeleteByOrder(ctx context.Context, orderId int64) error {
+	return r.q.RemoveCartsByOrder(ctx, orderId)
+}

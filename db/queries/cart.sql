@@ -23,3 +23,7 @@ RETURNING *;
 -- name: RemoveCart :exec
 DELETE FROM carts
 WHERE id = $1;
+
+-- name: RemoveCartsByOrder :exec
+DELETE FROM carts
+WHERE order_id = $1;

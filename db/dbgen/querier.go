@@ -9,6 +9,7 @@ import (
 )
 
 type Querier interface {
+	AddAccess(ctx context.Context, arg *AddAccessParams) (*Access, error)
 	AddCart(ctx context.Context, arg *AddCartParams) (*Cart, error)
 	AddOrder(ctx context.Context, arg *AddOrderParams) (*Order, error)
 	AddPayment(ctx context.Context, arg *AddPaymentParams) (*Payment, error)
@@ -16,18 +17,23 @@ type Querier interface {
 	CountOrdersByOrderNumber(ctx context.Context, orderNumber string) (int64, error)
 	CountPayments(ctx context.Context) (int64, error)
 	CountPaymentsByPaymentNumber(ctx context.Context, paymentNumber string) (int64, error)
+	EditAccess(ctx context.Context, arg *EditAccessParams) (*Access, error)
 	EditCart(ctx context.Context, arg *EditCartParams) (*Cart, error)
 	EditOrder(ctx context.Context, arg *EditOrderParams) (*Order, error)
 	EditPayment(ctx context.Context, arg *EditPaymentParams) (*Payment, error)
+	GetAccess(ctx context.Context, id int64) (*Access, error)
 	GetCart(ctx context.Context, id int64) (*Cart, error)
 	GetOrder(ctx context.Context, id int64) (*Order, error)
 	GetPayment(ctx context.Context, paymentNumber string) (*Payment, error)
+	ListAccesses(ctx context.Context) ([]*Access, error)
 	ListCarts(ctx context.Context) ([]*Cart, error)
 	PaginateOrders(ctx context.Context, arg *PaginateOrdersParams) ([]*Order, error)
 	PaginateOrdersWithParams(ctx context.Context, arg *PaginateOrdersWithParamsParams) ([]*Order, error)
 	PaginatePayments(ctx context.Context, arg *PaginatePaymentsParams) ([]*Payment, error)
 	PaginatePaymentsWithParams(ctx context.Context, arg *PaginatePaymentsWithParamsParams) ([]*Payment, error)
+	RemoveAccess(ctx context.Context, id int64) error
 	RemoveCart(ctx context.Context, id int64) error
+	RemoveCartsByOrder(ctx context.Context, orderID int64) error
 	RemoveOrder(ctx context.Context, id int64) error
 }
 

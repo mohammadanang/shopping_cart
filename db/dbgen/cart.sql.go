@@ -141,3 +141,13 @@ func (q *Queries) RemoveCart(ctx context.Context, id int64) error {
 	_, err := q.db.Exec(ctx, removeCart, id)
 	return err
 }
+
+const removeCartsByOrder = `-- name: RemoveCartsByOrder :exec
+DELETE FROM carts
+WHERE order_id = $1
+`
+
+func (q *Queries) RemoveCartsByOrder(ctx context.Context, orderID int64) error {
+	_, err := q.db.Exec(ctx, removeCartsByOrder, orderID)
+	return err
+}

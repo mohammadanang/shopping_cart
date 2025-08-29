@@ -14,7 +14,7 @@ properties:
     type: string
   price:
     type: integer
-    format: float
+    format: float64
   order_id:
     type: integer
     format: int64

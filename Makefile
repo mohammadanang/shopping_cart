@@ -2,11 +2,16 @@ DB_URL=
 FILENAME=
 VERSION=
 
+key_pairs:
+	@openssl genpkey -algorithm ed25519 -out private.pem
+	@openssl pkey -in private.pem -pubout -out public.pem
 run:
 	@go run cmd/shopping_cart/main.go
-openapi:
-	@go run github.com/oapi-codegen/oapi-codegen/v2/cmd/oapi-codegen -config api/config.yaml ./api/api.yaml
-# make sure to install sqlc
+prepare: key_pairs
+	@if ! test -f app.env; then \
+		cp app.env.example app.env; \
+	fi
+# make sure to install sqlc locally
 sqlc:
 	@sqlc generate --file=db/sqlc.yaml
 db_up:
@@ -22,8 +27,5 @@ migrate_down:
 	@migrate -path=./db/migrations -database "${DB_URL}" down
 migrate_force:
 	@migrate -path=./db/migrations -database "${DB_URL}" force ${VERSION}
-key_pairs:
-	@openssl genpkey -algorithm ed25519 -out private.pem
-	@openssl pkey -in private.pem -pubout -out public.pem
 
-.PHONY: run openapi sqlc db_up db_down migration migrate_up migrate_down migrate_force key_pairs
+.PHONY: run sqlc db_up db_down migration migrate_up migrate_down migrate_force key_pairs prepare

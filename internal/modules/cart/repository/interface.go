@@ -12,4 +12,5 @@ type Repository interface {
 	Show(ctx context.Context, id int64) (*dbgen.Cart, error)
 	Update(ctx context.Context, id int64, item dbgen.EditCartParams) (*dbgen.Cart, error)
 	Delete(ctx context.Context, id int64) error
+	DeleteByOrder(ctx context.Context, orderId int64) error
 }

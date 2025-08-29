@@ -9,7 +9,7 @@ services:
       POSTGRES_USER: '${DB_USER}'
       POSTGRES_PASSWORD: '${DB_PASSWORD}'
     volumes:
-      - './deployments/postgres/data:/var/lib/postgresql/data'
+      - './.deployments/postgres/data:/var/lib/postgresql/data'
     restart: always
   adminer:
     container_name: adminer-sc

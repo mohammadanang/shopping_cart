@@ -3,11 +3,11 @@ package service
 import (
 	"context"
 
-	"github.com/mohammadanang/shopping-cart/pkg/api"
+	"github.com/mohammadanang/shopping-cart/internal/modules/cart/domain"
 )
 
 type Service interface {
-	Add(ctx context.Context, payload api.AddCartJSONRequestBody) (*api.CartSuccessResponse, error)
-	List(ctx context.Context) (*api.CartListSuccessResponse, error)
-	Remove(ctx context.Context, id int64) (*api.CartSuccessResponse, error)
+	AddAndOrEdit(ctx context.Context, payload domain.AddRequest) (*domain.AddResponse, error)
+	// List(ctx context.Context) ([]*domain.Cart, error)
+	// Remove(ctx context.Context, id int64) (*domain.Cart, error)
 }

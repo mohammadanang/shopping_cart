@@ -1,5 +1,7 @@
 app.env
 vendor/
-deployments/*
+.deployments/*
 public.pem
 private.pem
+node_modules/
+package-lock*
