@@ -36,7 +36,7 @@ func main() {
 	// === CONFIGURATION ===
 
 	app := fiber.New()
-	appServer := server.NewServer(db.Queries, dbStore, app, cfg)
+	appServer := server.NewServer(dbStore, app, cfg)
 
 	// === MIDDLEWARES ===
 	appServer.SetMiddlewares()

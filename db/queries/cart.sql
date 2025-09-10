@@ -1,11 +1,12 @@
 -- name: AddCart :one
-INSERT INTO carts (product_name, qty, buyer, price, order_id)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO carts (product_name, qty, price, order_id)
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: ListCarts :many
 SELECT *
 FROM carts
+WHERE order_id = $1
 ORDER BY updated_at DESC;
 
 -- name: GetCart :one

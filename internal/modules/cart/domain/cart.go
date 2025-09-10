@@ -6,23 +6,26 @@ type Cart struct {
 	Id          int64      `json:"id"`
 	ProductName string     `json:"product_name"`
 	Qty         int32      `json:"qty"`
-	Buyer       string     `json:"buyer"`
 	Price       float64    `json:"price"`
 	OrderId     int64      `json:"order_id"`
 	CreatedAt   *time.Time `json:"created_at,omitempty"`
 	UpdatedAt   *time.Time `json:"updated_at,omitempty"`
 }
 
+type CartWithOrder struct {
+	Cart
+	OrderNumber string `json:"order_number"`
+}
+
 type AddInput struct {
 	ProductName string  `json:"product_name"`
 	Qty         int32   `json:"qty"`
-	Buyer       string  `json:"buyer"`
 	Price       float64 `json:"price"`
-	OrderId     int64   `json:"order_id"`
 }
 
 type AddRequest struct {
 	OrderId *int64     `json:"order_id"`
+	Buyer   *string    `json:"buyer"`
 	Data    []AddInput `json:"data"`
 }
 
@@ -32,7 +35,12 @@ type Result struct {
 }
 
 type AddResponse struct {
+	Type        string `json:"type"`
 	OrderId     int64  `json:"order_id"`
 	OrderNumber string `json:"order_number"`
 	Items       []Cart `json:"items"`
+}
+
+type ListRequest struct {
+	OrderId int64 `json:"order_id" query:"order_id"`
 }

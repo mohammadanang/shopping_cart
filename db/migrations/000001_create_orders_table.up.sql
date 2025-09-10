@@ -4,6 +4,7 @@ CREATE TABLE "orders" (
   "discount" float NOT NULL,
   "status" varchar(30) NOT NULL DEFAULT 'pending',
   "total" float NOT NULL,
+  "buyer" varchar(150) NOT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );

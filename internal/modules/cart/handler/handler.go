@@ -23,6 +23,7 @@ func (h *Handler) RegisterRoutes(r fiber.Router) {
 	cartV1 := r.Group("/cart/v1")
 
 	cartV1.Post("/", h.addCart)
+	cartV1.Get("/", h.listCarts)
 }
 
 func (h *Handler) addCart(c *fiber.Ctx) error {
@@ -51,24 +52,52 @@ func (h *Handler) addCart(c *fiber.Ctx) error {
 		result = append(result, &item)
 	}
 
-	return c.Status(fiber.StatusCreated).JSON(wrapper.OkResponse[[]*domain.Cart]{
-		Code:    fiber.StatusCreated,
+	statusCode := fiber.StatusCreated
+	if create.Type == "edit" {
+		statusCode = fiber.StatusOK
+	}
+
+	return c.Status(statusCode).JSON(wrapper.OkResponse[[]*domain.Cart]{
+		Code:    statusCode,
 		Status:  "success",
 		Message: "Item added to cart",
 		Data:    result,
 	})
 }
 
-// func (h *Handler) listCarts(c *fiber.Ctx) error {
-// 	all, err := h.svc.List(c.Context())
-// 	if err != nil {
-// 		log.Println(err.Error())
-// 		return c.Status(fiber.StatusInternalServerError).JSON(wrapper.ErrResponse{
-// 			Message: "Failed to list carts",
-// 			Status:  "error",
-// 			Code:    fiber.StatusInternalServerError,
-// 		})
-// 	}
+func (h *Handler) listCarts(c *fiber.Ctx) error {
+	queryParam := new(domain.ListRequest)
+	if err := c.QueryParser(queryParam); err != nil {
+		log.Println(err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(wrapper.ErrResponse{
+			Message: "Invalid request body",
+			Status:  "error",
+			Code:    fiber.StatusBadRequest,
+		})
+	}
 
-// 	return c.Status(fiber.StatusOK).JSON(all)
-// }
+	all, err := h.svc.List(c.Context(), *queryParam)
+	if err != nil {
+		log.Println(err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(wrapper.ErrResponse{
+			Message: "Failed to list carts",
+			Status:  "error",
+			Code:    fiber.StatusInternalServerError,
+		})
+	}
+
+	var carts []*domain.CartWithOrder
+	for _, item := range all.Items {
+		carts = append(carts, &domain.CartWithOrder{
+			Cart:        item,
+			OrderNumber: all.OrderNumber,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(wrapper.OkResponse[[]*domain.CartWithOrder]{
+		Code:    fiber.StatusOK,
+		Status:  "success",
+		Message: "Carts listed",
+		Data:    carts,
+	})
+}

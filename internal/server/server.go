@@ -30,8 +30,8 @@ type Server struct {
 	conf     *config.Config
 }
 
-func NewServer(db *dbgen.Queries, store dbgen.Store, app *fiber.App, cfg *config.Config) *Server {
-	cartRepo := cartRepository.NewCartRepository(db)
+func NewServer(store dbgen.Store, app *fiber.App, cfg *config.Config) *Server {
+	cartRepo := cartRepository.NewCartRepository(store)
 	cartSvc := cartService.NewCartService(store, cartRepo)
 	cartHdl := cartHandler.NewCartHandler(cartSvc)
 

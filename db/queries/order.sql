@@ -1,6 +1,6 @@
 -- name: AddOrder :one
-INSERT INTO orders (order_number, discount, "status", total)
-VALUES ($1, $2, $3, $4)
+INSERT INTO orders (order_number, discount, "status", buyer, total)
+VALUES ($1, $2, $3, $4, $5)
 RETURNING *;
 
 -- name: PaginateOrders :many
