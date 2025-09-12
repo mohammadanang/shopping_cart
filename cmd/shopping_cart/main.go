@@ -44,11 +44,10 @@ func main() {
 
 	// === ROUTES ===
 	appServer.SetRoutes()
-
-	wd, _ := os.Getwd() // current working directory
-	openapiPath := filepath.Join(wd, "api", "api.yaml")
-	app.Static("/openapi.json", openapiPath)
-	app.Static("/swagger", "./docs/swagger-ui")
+	// === SWAGGER DOCS ===
+	app.Static("/openapi.json", filepath.Join("api", "api.yaml"))
+	app.Static("/docs", filepath.Join("docs", "swagger-ui"))
+	// === SWAGGER DOCS ===
 	// === ROUTES ===
 
 	// Run server in goroutine
@@ -60,8 +59,7 @@ func main() {
 		}
 	}()
 
-	// === SHUTDOWN ===
-	// Graceful shutdown
+	// === GRACEFULLY SHUTDOWN ===
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
@@ -71,5 +69,5 @@ func main() {
 
 	db.Pool.Close() // Close DB pool
 	log.Println("✅ Database pool closed, shutdown complete")
-	// === SHUTDOWN ===
+	// === GRACEFULLY SHUTDOWN ===
 }

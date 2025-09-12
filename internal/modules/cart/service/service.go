@@ -4,20 +4,17 @@ import (
 	"context"
 	"log"
 
-	"github.com/mohammadanang/shopping-cart/db/dbgen"
 	"github.com/mohammadanang/shopping-cart/internal/modules/cart/domain"
 	cartR "github.com/mohammadanang/shopping-cart/internal/modules/cart/repository"
 )
 
 type CartService struct {
-	store    dbgen.Store // must be removed
 	cartRepo cartR.Repository
 }
 
-func NewCartService(store dbgen.Store, cartRepo cartR.Repository) Service {
+func NewCartService(cartRepo cartR.Repository) Service {
 	return &CartService{
 		cartRepo: cartRepo,
-		store:    store,
 	}
 }
 

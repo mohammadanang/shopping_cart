@@ -25,3 +25,11 @@ Using xendit as a payment gateway.
 - [order] Detail order with payment & cart data ❌
 - [payment] Complete payment & order (with payment gateway process) ❌
 - [payment] List payment history with paging ❌
+- [access] Register user access ❌
+- [access] Generate access token ❌
+- [access] Refresh access token ❌
+
+### Swagger Documentation Page
+
+link: **{baseUrl}/docs/index.html**
+json data: **{baseUrl}/openapi.json**

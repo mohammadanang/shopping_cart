@@ -8,35 +8,21 @@ import (
 )
 
 type OrderRepository struct {
-	q *dbgen.Queries
+	store dbgen.Store
 }
 
-func NewOrderRepository(queries *dbgen.Queries) Repository {
+func NewOrderRepository(store dbgen.Store) Repository {
 	return &OrderRepository{
-		q: queries,
+		store: store,
 	}
 }
 
-func (r *OrderRepository) Create(ctx context.Context, params dbgen.AddOrderParams) (*dbgen.Order, error) {
-	order, err := r.q.AddOrder(ctx, &params)
-	if err != nil {
-		return nil, err
-	}
-
-	return order, nil
-}
-
-func (r *OrderRepository) Update(ctx context.Context, params dbgen.EditOrderParams) (*dbgen.Order, error) {
-	order, err := r.q.EditOrder(ctx, &params)
-	if err != nil {
-		return nil, err
-	}
-
-	return order, nil
+func (r *OrderRepository) TxUpdateOrderAndPayment(ctx context.Context, payload domain.UpdateRequest) (*domain.UpdateResponse, error) {
+	return nil, nil
 }
 
 func (r *OrderRepository) Show(ctx context.Context, id int64) (*dbgen.Order, error) {
-	order, err := r.q.GetOrder(ctx, id)
+	order, err := r.store.GetOrder(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -44,14 +30,14 @@ func (r *OrderRepository) Show(ctx context.Context, id int64) (*dbgen.Order, err
 	return order, nil
 }
 
-func (r *OrderRepository) Paginate(ctx context.Context, params domain.PaginateRequest) ([]*dbgen.Order, error) {
-	if params.OrderNumber != nil {
+func (r *OrderRepository) Paginate(ctx context.Context, payload domain.PaginateParam) ([]*dbgen.Order, error) {
+	if payload.OrderNumber != nil {
 		payload := dbgen.PaginateOrdersWithParamsParams{
-			Limit:       params.Limit,
-			Offset:      params.Offset,
-			OrderNumber: *params.OrderNumber,
+			Limit:       payload.Limit,
+			Offset:      payload.Offset,
+			OrderNumber: *payload.OrderNumber,
 		}
-		orders, err := r.q.PaginateOrdersWithParams(ctx, &payload)
+		orders, err := r.store.PaginateOrdersWithParams(ctx, &payload)
 		if err != nil {
 			return nil, err
 		}
@@ -59,11 +45,11 @@ func (r *OrderRepository) Paginate(ctx context.Context, params domain.PaginateRe
 		return orders, nil
 	}
 
-	payload := dbgen.PaginateOrdersParams{
-		Limit:  params.Limit,
-		Offset: params.Offset,
+	params := dbgen.PaginateOrdersParams{
+		Limit:  payload.Limit,
+		Offset: payload.Offset,
 	}
-	orders, err := r.q.PaginateOrders(ctx, &payload)
+	orders, err := r.store.PaginateOrders(ctx, &params)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +59,7 @@ func (r *OrderRepository) Paginate(ctx context.Context, params domain.PaginateRe
 
 func (r *OrderRepository) Count(ctx context.Context, orderNumber *string) (int64, error) {
 	if orderNumber != nil {
-		count, err := r.q.CountOrdersByOrderNumber(ctx, *orderNumber)
+		count, err := r.store.CountOrdersByOrderNumber(ctx, *orderNumber)
 		if err != nil {
 			return 0, err
 		}
@@ -81,7 +67,7 @@ func (r *OrderRepository) Count(ctx context.Context, orderNumber *string) (int64
 		return count, nil
 	}
 
-	count, err := r.q.CountOrders(ctx)
+	count, err := r.store.CountOrders(ctx)
 	if err != nil {
 		return 0, err
 	}

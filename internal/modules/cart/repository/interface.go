@@ -7,12 +7,6 @@ import (
 	"github.com/mohammadanang/shopping-cart/internal/modules/cart/domain"
 )
 
-/**
-* Must existed:
-* - TxCreateOrUpdate
-* - List
-* - ShowOrder
- */
 type Repository interface {
 	TxCreateOrUpdate(ctx context.Context, payload domain.AddRequest) (*domain.AddResponse, error)
 	ShowOrder(ctx context.Context, id int64) (*dbgen.Order, error)

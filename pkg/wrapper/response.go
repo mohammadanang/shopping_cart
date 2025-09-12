@@ -22,8 +22,8 @@ type PaginateResponse[T interface{}] struct {
 }
 
 type Meta struct {
-	Page       int `json:"page"`
-	Limit      int `json:"size"`
-	TotalData  int `json:"totalData"`
-	TotalPages int `json:"totalPages"`
+	Page       int32 `json:"page"`
+	Limit      int32 `json:"size"`
+	TotalData  int32 `json:"totalData"`
+	TotalPages int32 `json:"totalPages"`
 }

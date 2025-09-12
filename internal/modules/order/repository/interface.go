@@ -8,9 +8,8 @@ import (
 )
 
 type Repository interface {
-	Create(ctx context.Context, params dbgen.AddOrderParams) (*dbgen.Order, error)
-	Update(ctx context.Context, params dbgen.EditOrderParams) (*dbgen.Order, error)
 	Show(ctx context.Context, id int64) (*dbgen.Order, error)
-	Paginate(ctx context.Context, params domain.PaginateRequest) ([]*dbgen.Order, error)
+	Paginate(ctx context.Context, payload domain.PaginateParam) ([]*dbgen.Order, error)
 	Count(ctx context.Context, orderNumber *string) (int64, error)
+	TxUpdateOrderAndPayment(ctx context.Context, payload domain.UpdateRequest) (*domain.UpdateResponse, error)
 }

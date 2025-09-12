@@ -1,7 +1,13 @@
 package service
 
 import (
+	"context"
+	"log"
+	"math"
+
+	"github.com/mohammadanang/shopping-cart/internal/modules/order/domain"
 	"github.com/mohammadanang/shopping-cart/internal/modules/order/repository"
+	"github.com/mohammadanang/shopping-cart/pkg/wrapper"
 )
 
 type OrderService struct {
@@ -13,36 +19,6 @@ func NewOrderService(repo repository.Repository) Service {
 		repo: repo,
 	}
 }
-
-// func (s *OrderService) Add(ctx context.Context, payload api.AddOrderJSONRequestBody) (*api.OrderSuccessResponse, error) {
-// 	order := dbgen.AddOrderParams{
-// 		OrderNumber: payload.OrderNumber,
-// 		Discount:    float64(payload.Discount),
-// 		Status:      payload.Status,
-// 		Total:       float64(payload.Total),
-// 	}
-// 	created, err := s.repo.Create(ctx, order)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	data := api.Order{
-// 		Id:          created.ID,
-// 		OrderNumber: created.OrderNumber,
-// 		Discount:    float32(created.Discount),
-// 		Status:      created.Status,
-// 		Total:       float32(created.Total),
-// 		CreatedAt:   created.CreatedAt.Format("2006-01-02 15:04:05"),
-// 		UpdatedAt:   created.UpdatedAt.Format("2006-01-02 15:04:05"),
-// 	}
-
-// 	return &api.OrderSuccessResponse{
-// 		Code:    201,
-// 		Data:    data,
-// 		Message: "Order created successfully",
-// 		Status:  "success",
-// 	}, nil
-// }
 
 // func (s *OrderService) Edit(ctx context.Context, id api.IdParam, payload api.EditOrderJSONRequestBody) (*api.OrderSuccessResponse, error) {
 // 	order := dbgen.EditOrderParams{
@@ -98,51 +74,82 @@ func NewOrderService(repo repository.Repository) Service {
 // 	}, nil
 // }
 
-// func (s *OrderService) Paginate(ctx context.Context, page api.PageParam, size api.SizeParam, orderNumber *api.OrderNumberParam) (*api.OrderPaginateSuccessResponse, error) {
-// 	params := domain.PaginateRequest{
-// 		Limit:  size,
-// 		Offset: (page - 1) * size,
-// 	}
-// 	if string(*orderNumber) != "" {
-// 		params.OrderNumber = orderNumber
-// 	}
+func (s *OrderService) Paginate(ctx context.Context, payload *domain.PaginateRequest) (*domain.PaginateResponse, error) {
+	page := int32(1)
+	size := int32(10)
+	if payload.Size != nil {
+		size = *payload.Size
+	}
 
-// 	orders, err := s.repo.Paginate(ctx, params)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	if payload.Page != nil {
+		page = *payload.Page
+	}
 
-// 	count, err := s.repo.Count(ctx, orderNumber)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	params := domain.PaginateParam{
+		Offset:      (page - 1) * size,
+		Limit:       size,
+		OrderNumber: payload.OrderNumber,
+	}
+	if payload.OrderNumber != nil {
+		params.OrderNumber = payload.OrderNumber
+	}
 
-// 	var data []api.Order
-// 	for _, order := range orders {
-// 		data = append(data, api.Order{
-// 			Id:          order.ID,
-// 			OrderNumber: order.OrderNumber,
-// 			Discount:    float32(order.Discount),
-// 			Status:      order.Status,
-// 			Total:       float32(order.Total),
-// 			CreatedAt:   order.CreatedAt.Format("2006-01-02 15:04:05"),
-// 			UpdatedAt:   order.UpdatedAt.Format("2006-01-02 15:04:05"),
-// 		})
-// 	}
+	result := make(chan domain.Result)
+	go func() {
+		defer close(result)
 
-// 	totalPages := int32(count) / size
-// 	meta := api.MetaData{
-// 		Page:       &page,
-// 		Size:       &size,
-// 		TotalData:  &count,
-// 		TotalPages: &totalPages,
-// 	}
+		var inResult domain.Result
+		orders, err := s.repo.Paginate(ctx, params)
+		if err != nil {
+			inResult.Error = err
+			return
+		}
 
-// 	return &api.OrderPaginateSuccessResponse{
-// 		Code:    200,
-// 		Data:    data,
-// 		Meta:    meta,
-// 		Message: "Orders retrieved successfully",
-// 		Status:  "success",
-// 	}, nil
-// }
+		count, err := s.repo.Count(ctx, params.OrderNumber)
+		if err != nil {
+			inResult.Error = err
+			return
+		}
+
+		var data []domain.Order
+		for _, order := range orders {
+			createdDate := order.CreatedAt.Format("2006-01-02 15:04:05")
+			updatedDate := order.UpdatedAt.Format("2006-01-02 15:04:05")
+
+			data = append(data, domain.Order{
+				ID:          order.ID,
+				OrderNumber: order.OrderNumber,
+				Discount:    order.Discount,
+				Status:      order.Status,
+				Total:       order.Total,
+				CreatedAt:   &createdDate,
+				UpdatedAt:   &updatedDate,
+			})
+		}
+
+		totalPages := int32(math.Ceil(float64(count) / float64(size)))
+		meta := wrapper.Meta{
+			Page:       page,
+			Limit:      size,
+			TotalData:  int32(count),
+			TotalPages: totalPages,
+		}
+
+		paginate := domain.PaginateResponse{
+			Items: data,
+			Meta:  meta,
+		}
+
+		inResult.Value = paginate
+		result <- inResult
+	}()
+	res := <-result
+	if res.Error != nil {
+		log.Println("update order & payment failed", res.Error.Error())
+		return nil, res.Error
+	}
+
+	data := res.Value.(domain.PaginateResponse)
+
+	return &data, nil
+}

@@ -10,8 +10,6 @@ properties:
   qty:
     type: integer
     format: int32
-  buyer:
-    type: string
   price:
     type: integer
     format: float64
@@ -21,4 +19,6 @@ properties:
   created_at:
     type: string
   updated_at:
+    type: string
+  order_number:
     type: string

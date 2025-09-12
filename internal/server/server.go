@@ -14,34 +14,41 @@ import (
 	cartHandler "github.com/mohammadanang/shopping-cart/internal/modules/cart/handler"
 	cartRepository "github.com/mohammadanang/shopping-cart/internal/modules/cart/repository"
 	cartService "github.com/mohammadanang/shopping-cart/internal/modules/cart/service"
+	orderHandler "github.com/mohammadanang/shopping-cart/internal/modules/order/handler"
+	orderRepository "github.com/mohammadanang/shopping-cart/internal/modules/order/repository"
+	orderService "github.com/mohammadanang/shopping-cart/internal/modules/order/service"
 
 	"github.com/mohammadanang/shopping-cart/pkg/config"
 )
 
 type handlers struct {
-	cartHandler.CartHandler
-	// orderHandler.OrderHandler
+	cart  cartHandler.CartHandler
+	order orderHandler.OrderHandler
 }
 
 type Server struct {
 	app      *fiber.App
 	store    dbgen.Store
-	Handlers ApiServer
-	conf     *config.Config
+	handlers handlers
+	cfg      *config.Config
 }
 
 func NewServer(store dbgen.Store, app *fiber.App, cfg *config.Config) *Server {
 	cartRepo := cartRepository.NewCartRepository(store)
-	cartSvc := cartService.NewCartService(store, cartRepo)
+	cartSvc := cartService.NewCartService(cartRepo)
 	cartHdl := cartHandler.NewCartHandler(cartSvc)
+
+	orderRepo := orderRepository.NewOrderRepository(store)
+	orderSvc := orderService.NewOrderService(orderRepo)
+	orderHdl := orderHandler.NewOrderHandler(orderSvc)
 
 	return &Server{
 		app:   app,
 		store: store,
-		conf:  cfg,
-		Handlers: &handlers{
-			// OrderHandler: orderHdl,
-			CartHandler: cartHdl,
+		cfg:   cfg,
+		handlers: handlers{
+			cart:  cartHdl,
+			order: orderHdl,
 		},
 	}
 }
@@ -59,8 +66,8 @@ func (s *Server) SetMiddlewares() {
 		TimeZone:   "Local",
 	}))
 	s.app.Use(limiter.New(limiter.Config{
-		Max:        10,              // allow 5 requests
-		Expiration: 1 * time.Minute, // per 30 seconds
+		Max:        60,
+		Expiration: 1 * time.Minute,
 		KeyGenerator: func(c *fiber.Ctx) string {
 			return c.IP() // rate limit by client IP
 		},
@@ -74,8 +81,8 @@ func (s *Server) SetMiddlewares() {
 		},
 	}))
 	s.app.Use(cors.New(cors.Config{
-		AllowOrigins:     s.conf.Env.AllowedOrigins,
-		AllowMethods:     s.conf.Env.AllowedMethods,
+		AllowOrigins:     s.cfg.Env.AllowedOrigins,
+		AllowMethods:     s.cfg.Env.AllowedMethods,
 		AllowHeaders:     "Origin, Content-Type, Accept, Authorization",
 		ExposeHeaders:    "Content-Length, X-Custom-Header",
 		AllowCredentials: true,
@@ -88,5 +95,6 @@ func (s *Server) SetRoutes() {
 	})
 
 	apiRoutes := s.app.Group("/api")
-	s.Handlers.RegisterRoutes(apiRoutes)
+	s.handlers.cart.RegisterRoutes(apiRoutes)
+	s.handlers.order.RegisterRoutes(apiRoutes)
 }
