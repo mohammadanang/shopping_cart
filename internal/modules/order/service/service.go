@@ -50,29 +50,80 @@ func NewOrderService(repo repository.Repository) Service {
 // 	}, nil
 // }
 
-// func (s *OrderService) Show(ctx context.Context, id api.IdParam) (*api.OrderSuccessResponse, error) {
-// 	show, err := s.repo.Show(ctx, int64(id))
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (s *OrderService) Show(ctx context.Context, id int64) (*domain.ShowResponse, error) {
+	result := make(chan domain.Result)
+	go func() {
+		defer close(result)
 
-// 	data := api.Order{
-// 		Id:          show.ID,
-// 		OrderNumber: show.OrderNumber,
-// 		Discount:    float32(show.Discount),
-// 		Status:      show.Status,
-// 		Total:       float32(show.Total),
-// 		CreatedAt:   show.CreatedAt.Format("2006-01-02 15:04:05"),
-// 		UpdatedAt:   show.UpdatedAt.Format("2006-01-02 15:04:05"),
-// 	}
+		var inResult domain.Result
+		order, err := s.repo.Show(ctx, id)
+		if err != nil {
+			inResult.Error = err
+			result <- inResult
+			return
+		}
 
-// 	return &api.OrderSuccessResponse{
-// 		Code:    200,
-// 		Data:    data,
-// 		Message: "Order retrieved successfully",
-// 		Status:  "success",
-// 	}, nil
-// }
+		carts, err := s.repo.ListCart(ctx, order.ID)
+		if err != nil {
+			inResult.Error = err
+			result <- inResult
+			return
+		}
+
+		var cartItems []domain.Cart
+		for _, item := range carts {
+			cartItems = append(cartItems, domain.Cart{
+				ProductName: item.ProductName,
+				Qty:         item.Qty,
+				Price:       item.Price,
+			})
+		}
+
+		var paymentData *domain.Payment
+		payment, err := s.repo.ShowPayment(ctx, order.ID)
+		if err == nil && payment != nil {
+			paymentData = &domain.Payment{
+				Method:        payment.Method,
+				Total:         payment.Total,
+				PaymentNumber: payment.PaymentNumber,
+			}
+		} else {
+			paymentData = nil
+		}
+
+		createdDate := order.CreatedAt.Format("2006-01-02 15:04:05")
+		updatedDate := order.UpdatedAt.Format("2006-01-02 15:04:05")
+
+		detailResp := domain.ShowResponse{
+			Order: domain.Order{
+				ID:          order.ID,
+				OrderNumber: order.OrderNumber,
+				Discount:    order.Discount,
+				Status:      order.Status,
+				Total:       order.Total,
+				Buyer:       order.Buyer,
+				CreatedAt:   &createdDate,
+				UpdatedAt:   &updatedDate,
+			},
+			Carts: cartItems,
+		}
+		if paymentData != nil {
+			detailResp.Payment = paymentData
+		}
+
+		inResult.Value = detailResp
+		result <- inResult
+	}()
+	res := <-result
+	if res.Error != nil {
+		log.Println("show order failed", res.Error.Error())
+		return nil, res.Error
+	}
+
+	data := res.Value.(domain.ShowResponse)
+
+	return &data, nil
+}
 
 func (s *OrderService) Paginate(ctx context.Context, payload *domain.PaginateRequest) (*domain.PaginateResponse, error) {
 	page := int32(1)
@@ -102,29 +153,53 @@ func (s *OrderService) Paginate(ctx context.Context, payload *domain.PaginateReq
 		orders, err := s.repo.Paginate(ctx, params)
 		if err != nil {
 			inResult.Error = err
+			result <- inResult
 			return
 		}
 
 		count, err := s.repo.Count(ctx, params.OrderNumber)
 		if err != nil {
 			inResult.Error = err
+			result <- inResult
 			return
 		}
 
-		var data []domain.Order
+		var data []domain.OrderWithCarts
 		for _, order := range orders {
+			carts, err := s.repo.ListCart(ctx, order.ID)
+			if err != nil {
+				inResult.Error = err
+				result <- inResult
+				break
+			}
+
+			var cartItems []domain.Cart
+			for _, cart := range carts {
+				cartItems = append(cartItems, domain.Cart{
+					ProductName: cart.ProductName,
+					Qty:         cart.Qty,
+					Price:       cart.Price,
+				})
+			}
+
 			createdDate := order.CreatedAt.Format("2006-01-02 15:04:05")
 			updatedDate := order.UpdatedAt.Format("2006-01-02 15:04:05")
 
-			data = append(data, domain.Order{
-				ID:          order.ID,
-				OrderNumber: order.OrderNumber,
-				Discount:    order.Discount,
-				Status:      order.Status,
-				Total:       order.Total,
-				CreatedAt:   &createdDate,
-				UpdatedAt:   &updatedDate,
-			})
+			orderItem := domain.OrderWithCarts{
+				Order: domain.Order{
+					ID:          order.ID,
+					OrderNumber: order.OrderNumber,
+					Discount:    order.Discount,
+					Status:      order.Status,
+					Total:       order.Total,
+					CreatedAt:   &createdDate,
+					UpdatedAt:   &updatedDate,
+				},
+				Carts:        cartItems,
+				TotalProduct: int32(len(carts)),
+			}
+
+			data = append(data, orderItem)
 		}
 
 		totalPages := int32(math.Ceil(float64(count) / float64(size)))

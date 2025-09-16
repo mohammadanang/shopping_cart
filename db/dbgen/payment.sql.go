@@ -129,6 +129,27 @@ func (q *Queries) GetPayment(ctx context.Context, paymentNumber string) (*Paymen
 	return &i, err
 }
 
+const getPaymentByOrder = `-- name: GetPaymentByOrder :one
+SELECT id, payment_number, order_id, method, total, paid_at, created_at, updated_at FROM payments
+WHERE order_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetPaymentByOrder(ctx context.Context, orderID int64) (*Payment, error) {
+	row := q.db.QueryRow(ctx, getPaymentByOrder, orderID)
+	var i Payment
+	err := row.Scan(
+		&i.ID,
+		&i.PaymentNumber,
+		&i.OrderID,
+		&i.Method,
+		&i.Total,
+		&i.PaidAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return &i, err
+}
+
 const paginatePayments = `-- name: PaginatePayments :many
 SELECT id, payment_number, order_id, method, total, paid_at, created_at, updated_at FROM payments
 ORDER BY updated_at DESC

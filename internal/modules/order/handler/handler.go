@@ -31,10 +31,6 @@ func (h *Handler) updateOrderAndPayment(c *fiber.Ctx) error {
 	return nil
 }
 
-func (h *Handler) showOrder(c *fiber.Ctx) error {
-	return nil
-}
-
 // func (h *Handler) AddOrder(c *fiber.Ctx) error {
 // 	body := new(api.AddOrderJSONRequestBody)
 // 	if err := c.BodyParser(body); err != nil {
@@ -80,12 +76,12 @@ func (h *Handler) listOrder(c *fiber.Ctx) error {
 		})
 	}
 
-	var orders []*domain.Order
+	var orders []*domain.OrderWithCarts
 	for _, item := range paginate.Items {
 		orders = append(orders, &item)
 	}
 
-	return c.Status(fiber.StatusOK).JSON(wrapper.PaginateResponse[*domain.Order]{
+	return c.Status(fiber.StatusOK).JSON(wrapper.PaginateResponse[*domain.OrderWithCarts]{
 		Code:    fiber.StatusOK,
 		Message: "Get orders successfully",
 		Status:  "success",
@@ -94,16 +90,31 @@ func (h *Handler) listOrder(c *fiber.Ctx) error {
 	})
 }
 
-// func (h *Handler) ShowOrder(c *fiber.Ctx, id api.IdParam) error {
-// 	order, err := h.svc.Show(c.Context(), id)
-// 	if err != nil {
-// 		log.Println(err.Error())
-// 		return c.Status(fiber.StatusInternalServerError).JSON(api.ErrorResponse{
-// 			Message: "Failed to retrieve order",
-// 			Status:  "error",
-// 			Code:    fiber.StatusInternalServerError,
-// 		})
-// 	}
+func (h *Handler) showOrder(c *fiber.Ctx) error {
+	params := new(domain.DetailRequest)
+	if err := c.ParamsParser(params); err != nil {
+		log.Println(err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(wrapper.ErrResponse{
+			Message: "Invalid request body",
+			Status:  "error",
+			Code:    fiber.StatusBadRequest,
+		})
+	}
 
-// 	return c.Status(fiber.StatusOK).JSON(order)
-// }
+	order, err := h.svc.Show(c.Context(), params.ID)
+	if err != nil {
+		log.Println(err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(wrapper.ErrResponse{
+			Message: "Failed to retrieve order",
+			Status:  "error",
+			Code:    fiber.StatusNotFound,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(wrapper.OkResponse[*domain.ShowResponse]{
+		Code:    fiber.StatusOK,
+		Message: "Get order successfully",
+		Status:  "success",
+		Data:    order,
+	})
+}

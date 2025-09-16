@@ -74,3 +74,21 @@ func (r *OrderRepository) Count(ctx context.Context, orderNumber *string) (int64
 
 	return count, nil
 }
+
+func (r *OrderRepository) ListCart(ctx context.Context, orderId int64) ([]*dbgen.Cart, error) {
+	carts, err := r.store.ListCarts(ctx, orderId)
+	if err != nil {
+		return nil, err
+	}
+
+	return carts, nil
+}
+
+func (r *OrderRepository) ShowPayment(ctx context.Context, id int64) (*dbgen.Payment, error) {
+	payment, err := r.store.GetPaymentByOrder(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return payment, nil
+}

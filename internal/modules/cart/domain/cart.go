@@ -24,8 +24,8 @@ type AddInput struct {
 }
 
 type AddRequest struct {
-	OrderId *int64     `json:"order_id"`
-	Buyer   *string    `json:"buyer"`
+	OrderId *int64     `json:"order_id,omitempty"`
+	Buyer   string     `json:"buyer"`
 	Data    []AddInput `json:"data"`
 }
 
@@ -38,6 +38,7 @@ type AddResponse struct {
 	Type        string `json:"type"`
 	OrderId     int64  `json:"order_id"`
 	OrderNumber string `json:"order_number"`
+	Buyer       string `json:"buyer"`
 	Items       []Cart `json:"items"`
 }
 

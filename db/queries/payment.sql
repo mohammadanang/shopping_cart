@@ -27,6 +27,10 @@ WHERE payment_number ILIKE $1;
 SELECT * FROM payments
 WHERE payment_number = $1 LIMIT 1;
 
+-- name: GetPaymentByOrder :one
+SELECT * FROM payments
+WHERE order_id = $1 LIMIT 1;
+
 -- name: EditPayment :one
 UPDATE payments
 SET method = $2,

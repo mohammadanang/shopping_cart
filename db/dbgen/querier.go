@@ -25,6 +25,7 @@ type Querier interface {
 	GetCart(ctx context.Context, id int64) (*Cart, error)
 	GetOrder(ctx context.Context, id int64) (*Order, error)
 	GetPayment(ctx context.Context, paymentNumber string) (*Payment, error)
+	GetPaymentByOrder(ctx context.Context, orderID int64) (*Payment, error)
 	ListAccesses(ctx context.Context) ([]*Access, error)
 	ListCarts(ctx context.Context, orderID int64) ([]*Cart, error)
 	PaginateOrders(ctx context.Context, arg *PaginateOrdersParams) ([]*Order, error)

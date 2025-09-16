@@ -37,7 +37,7 @@ func (r *CartRepository) TxCreateOrUpdate(ctx context.Context, payload domain.Ad
 				Total:       0,
 				Discount:    0,
 				OrderNumber: orderNumber,
-				Buyer:       *payload.Buyer,
+				Buyer:       payload.Buyer,
 			})
 			if err != nil {
 				return err
@@ -93,6 +93,7 @@ func (r *CartRepository) TxCreateOrUpdate(ctx context.Context, payload domain.Ad
 		result.OrderId = editedOrd.ID
 		result.OrderNumber = editedOrd.OrderNumber
 		result.Items = cartSlices
+		result.Buyer = editedOrd.Buyer
 
 		return nil
 	})

@@ -23,7 +23,8 @@ type Cart struct {
 
 type OrderWithCarts struct {
 	Order
-	Carts []Cart `json:"carts"`
+	TotalProduct int32  `json:"total_product"`
+	Carts        []Cart `json:"carts"`
 }
 
 type UpdateRequest struct {
@@ -58,7 +59,23 @@ type PaginateParam struct {
 	OrderNumber *string `json:"order_number"`
 }
 
+type DetailRequest struct {
+	ID int64 `json:"id"`
+}
+
 type PaginateResponse struct {
-	Items []Order      `json:"items"`
-	Meta  wrapper.Meta `json:"meta"`
+	Items []OrderWithCarts `json:"items"`
+	Meta  wrapper.Meta     `json:"meta"`
+}
+
+type Payment struct {
+	PaymentNumber string  `json:"payment_number"`
+	Method        string  `json:"method"`
+	Total         float64 `json:"total"`
+}
+
+type ShowResponse struct {
+	Order
+	Carts    []Cart `json:"carts"`
+	*Payment `json:"payment"`
 }

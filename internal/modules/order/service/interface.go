@@ -9,6 +9,6 @@ import (
 type Service interface {
 	// Add(ctx context.Context, payload api.AddOrderJSONRequestBody) (*api.OrderSuccessResponse, error)
 	// Edit(ctx context.Context, id api.IdParam, payload api.EditOrderJSONRequestBody) (*api.OrderSuccessResponse, error)
-	// Show(ctx context.Context, id api.IdParam) (*api.OrderSuccessResponse, error)
+	Show(ctx context.Context, id int64) (*domain.ShowResponse, error)
 	Paginate(ctx context.Context, payload *domain.PaginateRequest) (*domain.PaginateResponse, error)
 }
