@@ -28,18 +28,19 @@ type OrderWithCarts struct {
 }
 
 type UpdateRequest struct {
-	OrderId       int64   `json:"order_id"`
 	Discount      float64 `json:"discount"`
 	PaymentMethod string  `json:"payment_method"`
-	Total         float64 `json:"total"`
 }
 
 type UpdateResponse struct {
 	OrderId       int64   `json:"order_id"`
 	OrderNumber   string  `json:"order_number"`
+	Buyer         string  `json:"buyer"`
 	PaymentNumber string  `json:"payment_number"`
 	Status        string  `json:"status"`
-	Total         float64 `json:"total"`
+	TotalOrder    float64 `json:"total_order"`
+	Discount      float64 `json:"discount"`
+	TotalPaid     float64 `json:"total_paid"`
 }
 
 type Result struct {

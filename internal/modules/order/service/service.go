@@ -20,35 +20,33 @@ func NewOrderService(repo repository.Repository) Service {
 	}
 }
 
-// func (s *OrderService) Edit(ctx context.Context, id api.IdParam, payload api.EditOrderJSONRequestBody) (*api.OrderSuccessResponse, error) {
-// 	order := dbgen.EditOrderParams{
-// 		ID:       int64(id),
-// 		Discount: float64(payload.Discount),
-// 		Status:   payload.Status,
-// 		Total:    float64(payload.Total),
-// 	}
-// 	updated, err := s.repo.Update(ctx, order)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+func (s *OrderService) EditOrderAndPayment(ctx context.Context, orderId int64, payload domain.UpdateRequest) (*domain.UpdateResponse, error) {
+	result := make(chan domain.Result)
+	go func() {
+		defer close(result)
 
-// 	data := api.Order{
-// 		Id:          updated.ID,
-// 		OrderNumber: updated.OrderNumber,
-// 		Discount:    float32(updated.Discount),
-// 		Status:      updated.Status,
-// 		Total:       float32(updated.Total),
-// 		CreatedAt:   updated.CreatedAt.Format("2006-01-02 15:04:05"),
-// 		UpdatedAt:   updated.UpdatedAt.Format("2006-01-02 15:04:05"),
-// 	}
+		var inResult domain.Result
+		updated, err := s.repo.TxUpdateOrderAndPayment(ctx, orderId, payload)
+		if err != nil {
+			inResult.Error = err
+			result <- inResult
+			return
+		}
 
-// 	return &api.OrderSuccessResponse{
-// 		Code:    200,
-// 		Data:    data,
-// 		Message: "Order updated successfully",
-// 		Status:  "success",
-// 	}, nil
-// }
+		inResult.Value = *updated
+		result <- inResult
+	}()
+
+	res := <-result
+	if res.Error != nil {
+		log.Println("update order and payment failed", res.Error.Error())
+		return nil, res.Error
+	}
+
+	data := res.Value.(domain.UpdateResponse)
+
+	return &data, nil
+}
 
 func (s *OrderService) Show(ctx context.Context, id int64) (*domain.ShowResponse, error) {
 	result := make(chan domain.Result)

@@ -11,7 +11,7 @@ type Repository interface {
 	Show(ctx context.Context, id int64) (*dbgen.Order, error)
 	Paginate(ctx context.Context, payload domain.PaginateParam) ([]*dbgen.Order, error)
 	Count(ctx context.Context, orderNumber *string) (int64, error)
-	TxUpdateOrderAndPayment(ctx context.Context, payload domain.UpdateRequest) (*domain.UpdateResponse, error)
+	TxUpdateOrderAndPayment(ctx context.Context, orderId int64, payload domain.UpdateRequest) (*domain.UpdateResponse, error)
 	ListCart(ctx context.Context, orderId int64) ([]*dbgen.Cart, error)
 	ShowPayment(ctx context.Context, id int64) (*dbgen.Payment, error)
 }

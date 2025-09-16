@@ -12,17 +12,16 @@ import (
 )
 
 const addPayment = `-- name: AddPayment :one
-INSERT INTO payments (payment_number, order_id, method, total, paid_at)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO payments (payment_number, order_id, method, total)
+VALUES ($1, $2, $3, $4)
 RETURNING id, payment_number, order_id, method, total, paid_at, created_at, updated_at
 `
 
 type AddPaymentParams struct {
-	PaymentNumber string             `json:"payment_number"`
-	OrderID       int64              `json:"order_id"`
-	Method        string             `json:"method"`
-	Total         float64            `json:"total"`
-	PaidAt        pgtype.Timestamptz `json:"paid_at"`
+	PaymentNumber string  `json:"payment_number"`
+	OrderID       int64   `json:"order_id"`
+	Method        string  `json:"method"`
+	Total         float64 `json:"total"`
 }
 
 func (q *Queries) AddPayment(ctx context.Context, arg *AddPaymentParams) (*Payment, error) {
@@ -31,7 +30,6 @@ func (q *Queries) AddPayment(ctx context.Context, arg *AddPaymentParams) (*Payme
 		arg.OrderID,
 		arg.Method,
 		arg.Total,
-		arg.PaidAt,
 	)
 	var i Payment
 	err := row.Scan(

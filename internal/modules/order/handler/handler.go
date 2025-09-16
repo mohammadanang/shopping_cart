@@ -28,32 +28,43 @@ func (h *Handler) RegisterRoutes(r fiber.Router) {
 }
 
 func (h *Handler) updateOrderAndPayment(c *fiber.Ctx) error {
-	return nil
+	params := new(domain.DetailRequest)
+	if err := c.ParamsParser(params); err != nil {
+		log.Println(err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(wrapper.ErrResponse{
+			Message: "Invalid request body",
+			Status:  "error",
+			Code:    fiber.StatusBadRequest,
+		})
+	}
+
+	payload := new(domain.UpdateRequest)
+	if err := c.BodyParser(payload); err != nil {
+		log.Println(err.Error())
+		return c.Status(fiber.StatusBadRequest).JSON(wrapper.ErrResponse{
+			Message: "Invalid request body",
+			Status:  "error",
+			Code:    fiber.StatusBadRequest,
+		})
+	}
+
+	update, err := h.svc.EditOrderAndPayment(c.Context(), params.ID, *payload)
+	if err != nil {
+		log.Println(err.Error())
+		return c.Status(fiber.StatusInternalServerError).JSON(wrapper.ErrResponse{
+			Message: "Failed to update order and payment",
+			Status:  "error",
+			Code:    fiber.StatusInternalServerError,
+		})
+	}
+
+	return c.Status(fiber.StatusOK).JSON(wrapper.OkResponse[*domain.UpdateResponse]{
+		Code:    fiber.StatusOK,
+		Message: "Update order and payment successfully",
+		Status:  "success",
+		Data:    update,
+	})
 }
-
-// func (h *Handler) AddOrder(c *fiber.Ctx) error {
-// 	body := new(api.AddOrderJSONRequestBody)
-// 	if err := c.BodyParser(body); err != nil {
-// 		log.Println(err.Error())
-// 		return c.Status(fiber.StatusBadRequest).JSON(api.ErrorResponse{
-// 			Message: "Invalid request body",
-// 			Status:  "error",
-// 			Code:    fiber.StatusBadRequest,
-// 		})
-// 	}
-
-// 	create, err := h.svc.Add(c.Context(), *body)
-// 	if err != nil {
-// 		log.Println(err.Error())
-// 		return c.Status(fiber.StatusInternalServerError).JSON(api.ErrorResponse{
-// 			Message: "Failed to add order",
-// 			Status:  "error",
-// 			Code:    fiber.StatusInternalServerError,
-// 		})
-// 	}
-
-// 	return c.Status(fiber.StatusCreated).JSON(create)
-// }
 
 func (h *Handler) listOrder(c *fiber.Ctx) error {
 	queryParam := new(domain.PaginateRequest)

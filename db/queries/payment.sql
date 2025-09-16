@@ -1,6 +1,6 @@
 -- name: AddPayment :one
-INSERT INTO payments (payment_number, order_id, method, total, paid_at)
-VALUES ($1, $2, $3, $4, $5)
+INSERT INTO payments (payment_number, order_id, method, total)
+VALUES ($1, $2, $3, $4)
 RETURNING *;
 
 -- name: PaginatePayments :many

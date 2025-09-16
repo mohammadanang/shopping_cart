@@ -20,7 +20,7 @@ Using xendit as a payment gateway.
 
 - [cart] Add and/or edit (remove included) items to cart (also create order first) ✅
 - [cart] List all carts with order data ✅
-- [order] Submit order & payment ❌
+- [order] Submit order & payment ✅
 - [order] List order history with paging ✅
 - [order] Detail order with payment (optional, null allowed) & cart data ✅
 - [payment] Complete payment & order (with payment gateway process) ❌
