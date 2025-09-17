@@ -13,6 +13,7 @@ type Querier interface {
 	AddCart(ctx context.Context, arg *AddCartParams) (*Cart, error)
 	AddOrder(ctx context.Context, arg *AddOrderParams) (*Order, error)
 	AddPayment(ctx context.Context, arg *AddPaymentParams) (*Payment, error)
+	ApprovePayment(ctx context.Context, arg *ApprovePaymentParams) (*Payment, error)
 	CountOrders(ctx context.Context) (int64, error)
 	CountOrdersByOrderNumber(ctx context.Context, orderNumber string) (int64, error)
 	CountPayments(ctx context.Context) (int64, error)

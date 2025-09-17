@@ -17,13 +17,17 @@ import (
 	orderHandler "github.com/mohammadanang/shopping-cart/internal/modules/order/handler"
 	orderRepository "github.com/mohammadanang/shopping-cart/internal/modules/order/repository"
 	orderService "github.com/mohammadanang/shopping-cart/internal/modules/order/service"
+	paymentHandler "github.com/mohammadanang/shopping-cart/internal/modules/payment/handler"
+	paymentRepository "github.com/mohammadanang/shopping-cart/internal/modules/payment/repository"
+	paymentService "github.com/mohammadanang/shopping-cart/internal/modules/payment/service"
 
 	"github.com/mohammadanang/shopping-cart/pkg/config"
 )
 
 type handlers struct {
-	cart  cartHandler.CartHandler
-	order orderHandler.OrderHandler
+	cart    cartHandler.CartHandler
+	order   orderHandler.OrderHandler
+	payment paymentHandler.PaymentHandler
 }
 
 type Server struct {
@@ -42,13 +46,18 @@ func NewServer(store dbgen.Store, app *fiber.App, cfg *config.Config) *Server {
 	orderSvc := orderService.NewOrderService(orderRepo)
 	orderHdl := orderHandler.NewOrderHandler(orderSvc)
 
+	paymentRepo := paymentRepository.NewPaymentRepository(store)
+	paymentSvc := paymentService.NewPaymentService(paymentRepo)
+	paymentHdl := paymentHandler.NewPaymentHandler(paymentSvc)
+
 	return &Server{
 		app:   app,
 		store: store,
 		cfg:   cfg,
 		handlers: handlers{
-			cart:  cartHdl,
-			order: orderHdl,
+			cart:    cartHdl,
+			order:   orderHdl,
+			payment: paymentHdl,
 		},
 	}
 }
@@ -97,4 +106,5 @@ func (s *Server) SetRoutes() {
 	apiRoutes := s.app.Group("/api")
 	s.handlers.cart.RegisterRoutes(apiRoutes)
 	s.handlers.order.RegisterRoutes(apiRoutes)
+	s.handlers.payment.RegisterRoutes(apiRoutes)
 }

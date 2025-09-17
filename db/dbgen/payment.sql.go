@@ -7,14 +7,12 @@ package dbgen
 
 import (
 	"context"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 const addPayment = `-- name: AddPayment :one
-INSERT INTO payments (payment_number, order_id, method, total)
-VALUES ($1, $2, $3, $4)
-RETURNING id, payment_number, order_id, method, total, paid_at, created_at, updated_at
+INSERT INTO payments (payment_number, order_id, method, total, "status", gateway)
+VALUES ($1, $2, $3, $4, $5, $6)
+RETURNING id, payment_number, order_id, method, total, paid_at, created_at, updated_at, status, gateway, gateway_ref_id, raw_response
 `
 
 type AddPaymentParams struct {
@@ -22,6 +20,8 @@ type AddPaymentParams struct {
 	OrderID       int64   `json:"order_id"`
 	Method        string  `json:"method"`
 	Total         float64 `json:"total"`
+	Status        string  `json:"status"`
+	Gateway       *string `json:"gateway"`
 }
 
 func (q *Queries) AddPayment(ctx context.Context, arg *AddPaymentParams) (*Payment, error) {
@@ -30,6 +30,8 @@ func (q *Queries) AddPayment(ctx context.Context, arg *AddPaymentParams) (*Payme
 		arg.OrderID,
 		arg.Method,
 		arg.Total,
+		arg.Status,
+		arg.Gateway,
 	)
 	var i Payment
 	err := row.Scan(
@@ -41,6 +43,54 @@ func (q *Queries) AddPayment(ctx context.Context, arg *AddPaymentParams) (*Payme
 		&i.PaidAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Status,
+		&i.Gateway,
+		&i.GatewayRefID,
+		&i.RawResponse,
+	)
+	return &i, err
+}
+
+const approvePayment = `-- name: ApprovePayment :one
+UPDATE payments
+SET paid_at = now(),
+  total = $2,
+  "status" = 'success',
+  gateway_ref_id = $3,
+  raw_response = $4,
+  updated_at = now()
+WHERE id = $1
+RETURNING id, payment_number, order_id, method, total, paid_at, created_at, updated_at, status, gateway, gateway_ref_id, raw_response
+`
+
+type ApprovePaymentParams struct {
+	ID           int64   `json:"id"`
+	Total        float64 `json:"total"`
+	GatewayRefID *string `json:"gateway_ref_id"`
+	RawResponse  []byte  `json:"raw_response"`
+}
+
+func (q *Queries) ApprovePayment(ctx context.Context, arg *ApprovePaymentParams) (*Payment, error) {
+	row := q.db.QueryRow(ctx, approvePayment,
+		arg.ID,
+		arg.Total,
+		arg.GatewayRefID,
+		arg.RawResponse,
+	)
+	var i Payment
+	err := row.Scan(
+		&i.ID,
+		&i.PaymentNumber,
+		&i.OrderID,
+		&i.Method,
+		&i.Total,
+		&i.PaidAt,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.Status,
+		&i.Gateway,
+		&i.GatewayRefID,
+		&i.RawResponse,
 	)
 	return &i, err
 }
@@ -72,25 +122,34 @@ const editPayment = `-- name: EditPayment :one
 UPDATE payments
 SET method = $2,
   total = $3,
-  paid_at = $4,
+  gateway = $4,
+  "status" = $5,
+  gateway_ref_id = $6,
+  raw_response = $7,
   updated_at = now()
-WHERE payment_number = $1
-RETURNING id, payment_number, order_id, method, total, paid_at, created_at, updated_at
+WHERE id = $1
+RETURNING id, payment_number, order_id, method, total, paid_at, created_at, updated_at, status, gateway, gateway_ref_id, raw_response
 `
 
 type EditPaymentParams struct {
-	PaymentNumber string             `json:"payment_number"`
-	Method        string             `json:"method"`
-	Total         float64            `json:"total"`
-	PaidAt        pgtype.Timestamptz `json:"paid_at"`
+	ID           int64   `json:"id"`
+	Method       string  `json:"method"`
+	Total        float64 `json:"total"`
+	Gateway      *string `json:"gateway"`
+	Status       string  `json:"status"`
+	GatewayRefID *string `json:"gateway_ref_id"`
+	RawResponse  []byte  `json:"raw_response"`
 }
 
 func (q *Queries) EditPayment(ctx context.Context, arg *EditPaymentParams) (*Payment, error) {
 	row := q.db.QueryRow(ctx, editPayment,
-		arg.PaymentNumber,
+		arg.ID,
 		arg.Method,
 		arg.Total,
-		arg.PaidAt,
+		arg.Gateway,
+		arg.Status,
+		arg.GatewayRefID,
+		arg.RawResponse,
 	)
 	var i Payment
 	err := row.Scan(
@@ -102,12 +161,16 @@ func (q *Queries) EditPayment(ctx context.Context, arg *EditPaymentParams) (*Pay
 		&i.PaidAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Status,
+		&i.Gateway,
+		&i.GatewayRefID,
+		&i.RawResponse,
 	)
 	return &i, err
 }
 
 const getPayment = `-- name: GetPayment :one
-SELECT id, payment_number, order_id, method, total, paid_at, created_at, updated_at FROM payments
+SELECT id, payment_number, order_id, method, total, paid_at, created_at, updated_at, status, gateway, gateway_ref_id, raw_response FROM payments
 WHERE payment_number = $1 LIMIT 1
 `
 
@@ -123,12 +186,16 @@ func (q *Queries) GetPayment(ctx context.Context, paymentNumber string) (*Paymen
 		&i.PaidAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Status,
+		&i.Gateway,
+		&i.GatewayRefID,
+		&i.RawResponse,
 	)
 	return &i, err
 }
 
 const getPaymentByOrder = `-- name: GetPaymentByOrder :one
-SELECT id, payment_number, order_id, method, total, paid_at, created_at, updated_at FROM payments
+SELECT id, payment_number, order_id, method, total, paid_at, created_at, updated_at, status, gateway, gateway_ref_id, raw_response FROM payments
 WHERE order_id = $1 LIMIT 1
 `
 
@@ -144,12 +211,16 @@ func (q *Queries) GetPaymentByOrder(ctx context.Context, orderID int64) (*Paymen
 		&i.PaidAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.Status,
+		&i.Gateway,
+		&i.GatewayRefID,
+		&i.RawResponse,
 	)
 	return &i, err
 }
 
 const paginatePayments = `-- name: PaginatePayments :many
-SELECT id, payment_number, order_id, method, total, paid_at, created_at, updated_at FROM payments
+SELECT id, payment_number, order_id, method, total, paid_at, created_at, updated_at, status, gateway, gateway_ref_id, raw_response FROM payments
 ORDER BY updated_at DESC
 LIMIT $1
 OFFSET $2
@@ -178,6 +249,10 @@ func (q *Queries) PaginatePayments(ctx context.Context, arg *PaginatePaymentsPar
 			&i.PaidAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Status,
+			&i.Gateway,
+			&i.GatewayRefID,
+			&i.RawResponse,
 		); err != nil {
 			return nil, err
 		}
@@ -190,7 +265,7 @@ func (q *Queries) PaginatePayments(ctx context.Context, arg *PaginatePaymentsPar
 }
 
 const paginatePaymentsWithParams = `-- name: PaginatePaymentsWithParams :many
-SELECT id, payment_number, order_id, method, total, paid_at, created_at, updated_at FROM payments
+SELECT id, payment_number, order_id, method, total, paid_at, created_at, updated_at, status, gateway, gateway_ref_id, raw_response FROM payments
 WHERE payment_number ILIKE $3
 ORDER BY updated_at DESC
 LIMIT $1
@@ -221,6 +296,10 @@ func (q *Queries) PaginatePaymentsWithParams(ctx context.Context, arg *PaginateP
 			&i.PaidAt,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.Status,
+			&i.Gateway,
+			&i.GatewayRefID,
+			&i.RawResponse,
 		); err != nil {
 			return nil, err
 		}

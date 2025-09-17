@@ -1,6 +1,6 @@
 -- name: AddPayment :one
-INSERT INTO payments (payment_number, order_id, method, total)
-VALUES ($1, $2, $3, $4)
+INSERT INTO payments (payment_number, order_id, method, total, "status", gateway)
+VALUES ($1, $2, $3, $4, $5, $6)
 RETURNING *;
 
 -- name: PaginatePayments :many
@@ -35,7 +35,21 @@ WHERE order_id = $1 LIMIT 1;
 UPDATE payments
 SET method = $2,
   total = $3,
-  paid_at = $4,
+  gateway = $4,
+  "status" = $5,
+  gateway_ref_id = $6,
+  raw_response = $7,
   updated_at = now()
-WHERE payment_number = $1
+WHERE id = $1
+RETURNING *;
+
+-- name: ApprovePayment :one
+UPDATE payments
+SET paid_at = now(),
+  total = $2,
+  "status" = 'success',
+  gateway_ref_id = $3,
+  raw_response = $4,
+  updated_at = now()
+WHERE id = $1
 RETURNING *;

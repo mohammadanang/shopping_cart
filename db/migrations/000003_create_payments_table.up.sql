@@ -4,7 +4,7 @@ CREATE TABLE "payments" (
   "order_id" bigint NOT NULL,
   "method" varchar(30) NOT NULL,
   "total" float NOT NULL,
-  "paid_at" timestamptz,
+  "paid_at" timestamptz NULL DEFAULT NULL,
   "created_at" timestamptz NOT NULL DEFAULT (now()),
   "updated_at" timestamptz NOT NULL DEFAULT (now())
 );

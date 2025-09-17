@@ -6,8 +6,6 @@ package dbgen
 
 import (
 	"time"
-
-	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Access struct {
@@ -34,7 +32,7 @@ type Order struct {
 	ID          int64   `json:"id"`
 	OrderNumber string  `json:"order_number"`
 	Discount    float64 `json:"discount"`
-	// pending, completed
+	// pending, completed, cancelled
 	Status    string    `json:"status"`
 	Total     float64   `json:"total"`
 	Buyer     string    `json:"buyer"`
@@ -47,9 +45,15 @@ type Payment struct {
 	PaymentNumber string `json:"payment_number"`
 	OrderID       int64  `json:"order_id"`
 	// bank, e-wallet, etc
-	Method    string             `json:"method"`
-	Total     float64            `json:"total"`
-	PaidAt    pgtype.Timestamptz `json:"paid_at"`
-	CreatedAt time.Time          `json:"created_at"`
-	UpdatedAt time.Time          `json:"updated_at"`
+	Method    string     `json:"method"`
+	Total     float64    `json:"total"`
+	PaidAt    *time.Time `json:"paid_at"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
+	// pending, success, failed
+	Status string `json:"status"`
+	// xendit, stripe, midtrans
+	Gateway      *string `json:"gateway"`
+	GatewayRefID *string `json:"gateway_ref_id"`
+	RawResponse  []byte  `json:"raw_response"`
 }

@@ -11,4 +11,4 @@ CREATE TABLE "orders" (
 
 CREATE INDEX ON "orders" ("order_number");
 
-COMMENT ON COLUMN "orders"."status" IS 'pending, completed';
+COMMENT ON COLUMN "orders"."status" IS 'pending, completed, cancelled';

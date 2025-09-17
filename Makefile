@@ -2,6 +2,12 @@ DB_URL=
 FILENAME=
 VERSION=
 
+# Check if .env file exists and include it
+ifneq (,$(wildcard ./app.env))
+    include app.env
+    export
+endif
+
 key_pairs:
 	@openssl genpkey -algorithm ed25519 -out private.pem
 	@openssl pkey -in private.pem -pubout -out public.pem

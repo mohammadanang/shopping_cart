@@ -22,6 +22,10 @@ type Env struct {
 	DBPassword string `mapstructure:"DB_PASSWORD"`
 	DBName     string `mapstructure:"DB_NAME"`
 	SSLMode    string `mapstructure:"DB_SSLMODE"`
+
+	XenditBaseUrl      string `mapstructure:"XENDIT_BASE_URL"`
+	XenditSecretKey    string `mapstructure:"XENDIT_SECRET_KEY"`
+	XenditWebhookToken string `mapstructure:"XENDIT_WEBHOOK_TOKEN"`
 }
 
 type Config struct {
