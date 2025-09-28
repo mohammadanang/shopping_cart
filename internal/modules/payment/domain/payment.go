@@ -58,3 +58,17 @@ type CompleteResponse struct {
 	TotalPaid     float64 `json:"total_paid"`
 	PaidAt        string  `json:"paid_at"`
 }
+
+type XenditHeader struct {
+	XCallbackToken string `reqHeader:"x-callback-token" json:"x-callback-token"`
+}
+
+type XenditCallbackData struct {
+	Status      string `json:"status"`
+	ExternalID  string `json:"external_id"`
+	ReferenceID string `json:"reference_id"`
+}
+
+type XenditWebhook struct {
+	Data XenditCallbackData `json:"data"`
+}

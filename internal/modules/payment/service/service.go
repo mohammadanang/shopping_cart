@@ -2,21 +2,25 @@ package service
 
 import (
 	"context"
+	"errors"
 	"log"
 	"math"
 
 	"github.com/mohammadanang/shopping-cart/internal/modules/payment/domain"
 	"github.com/mohammadanang/shopping-cart/internal/modules/payment/repository"
+	"github.com/mohammadanang/shopping-cart/pkg/config"
 	"github.com/mohammadanang/shopping-cart/pkg/wrapper"
 )
 
 type PaymentService struct {
 	repo repository.Repository
+	env  *config.Env
 }
 
-func NewPaymentService(repo repository.Repository) Service {
+func NewPaymentService(repo repository.Repository, env *config.Env) Service {
 	return &PaymentService{
 		repo: repo,
+		env:  env,
 	}
 }
 
@@ -121,5 +125,13 @@ func (s *PaymentService) Paginate(ctx context.Context, payload *domain.PaginateR
 }
 
 func (s *PaymentService) CompletePayment(ctx context.Context, orderId int64, payload domain.CompleteRequest) (*domain.CompleteResponse, error) {
+	return nil, nil
+}
+
+func (s *PaymentService) WebHookOfXendit(ctx context.Context, payload domain.XenditWebhook, cbToken string) (*domain.PaymentWithOrder, error) {
+	if cbToken != s.env.XenditWebhookToken {
+		return nil, errors.New("invalid webhook callback token")
+	}
+
 	return nil, nil
 }

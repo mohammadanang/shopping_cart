@@ -47,7 +47,7 @@ func NewServer(store dbgen.Store, app *fiber.App, cfg *config.Config) *Server {
 	orderHdl := orderHandler.NewOrderHandler(orderSvc)
 
 	paymentRepo := paymentRepository.NewPaymentRepository(store)
-	paymentSvc := paymentService.NewPaymentService(paymentRepo)
+	paymentSvc := paymentService.NewPaymentService(paymentRepo, cfg.Env)
 	paymentHdl := paymentHandler.NewPaymentHandler(paymentSvc)
 
 	return &Server{
