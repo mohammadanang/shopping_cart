@@ -28,10 +28,10 @@ db_down:
 migration:
 	@migrate create -ext sql -dir db/migrations -seq $(FILENAME)
 migrate_up:
-	@migrate -path=./db/migrations -database "${DB_URL}" up
+	@migrate -path=./db/migrations -database ${DB_URL} up
 migrate_down:
-	@migrate -path=./db/migrations -database "${DB_URL}" down
+	@migrate -path=./db/migrations -database ${DB_URL} down
 migrate_force:
-	@migrate -path=./db/migrations -database "${DB_URL}" force ${VERSION}
+	@migrate -path=./db/migrations -database ${DB_URL} force ${VERSION}
 
 .PHONY: run sqlc db_up db_down migration migrate_up migrate_down migrate_force key_pairs prepare
